@@ -26,15 +26,37 @@ const escribirDatos = (datos) => {
 }
 
 app.get('/productos',(req,res)=>{
-    res.send('listado de productos');
+    const datos = leerDatos();
+    res.json(datos.productos)
+    //res.send('listado de productos');
 });
 
 app.post('/productos',(req,res)=>{
-    res.send('agregar producto');
+    const datos = leerDatos();    
+    const nuevoProducto={ id:datos.productos.length+1,
+        ...req.body
+    }
+    datos.productos.push(nuevoProducto);
+    escribirDatos(datos);
+    res.json({mensaje:'nuevo producto agregado',
+        producto:nuevoProducto
+    })
+    //res.send('agregar producto');
 });
 
 app.get('/productos/:id',(req,res)=>{
-    res.send('producto');
+    const datos = leerDatos();    
+    const prodEncontrado = datos.productos.find(p=>p.id == req.params.id);
+    if(!prodEncontrado){
+        return res.status(404).json({mensaje:'producto no encontrado'});
+    }
+    else{
+        res.json({mensaje:'producto encontrado',
+            producto:prodEncontrado
+        });
+    }
+    
+    //res.send('producto');
 });
 
 app.put('/productos/:id',(req,res)=>{
