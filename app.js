@@ -1,7 +1,7 @@
 const express = require('express');
 const fs = require('fs'); //file system, permite trabajar con archivos, no se instala, viene con node
 const app = express();
-const port = 4000;
+const port = 3000;
 
 //middleware
 app.use(express.json());
@@ -25,6 +25,13 @@ const escribirDatos = (datos) => {
     }
 }
 
+function reIndex(datos){
+    let indice = 1;
+    datos.productos.map((p)=>{
+        p.id = indice;
+        indice++;
+    });
+}
 app.get('/productos',(req,res)=>{
     const datos = leerDatos();
     res.json(datos.productos)
@@ -60,11 +67,30 @@ app.get('/productos/:id',(req,res)=>{
 });
 
 app.put('/productos/:id',(req,res)=>{
-    res.send('actualizar producto');
+    const id = req.params.id;
+    const nuevosDatos = req.body;
+    const datos = leerDatos();
+    const prodEncontrado = datos.productos.find(p=>p.id == req.params.id);
+    if(!prodEncontrado){
+        return res.status(404).json({mensaje:'producto no encontrado'});
+    }
+    datos.productos = datos.productos.map(p=>p.id==req.params.id ? {...p,...nuevosDatos}:p);
+    res.json({mensaje:"datos actualizados"});
 });
 
 app.delete('/productos/:id',(req,res)=>{
-    res.send('borrar producto');
+    //res.send(`borrando un producto`);
+    const datos = leerDatos();
+    const prodEncontrado = datos.productos.find((p)=>p.id == req.params.id);
+    if(!prodEncontrado){
+        return res.status(404),res.json("no se encuentra el producto");
+    }
+    //filter crea un reemplazo del array sin el borrado
+    datos.productos = datos.productos.filter((p)=>p.id != req.params.id);
+    reIndex(datos);
+    escribirDatos(datos);
+    console.log(datos.productos);
+    res.json("producto eliminado");
 });
 app.listen(port, ()=>{
     console.log(`Servidor corriendo en el puerto ${port}`);
